@@ -12,17 +12,25 @@
 
 namespace tinyobj {
 
+#ifdef TINY_OBJ_USE_DOUBLE
+  //#pragma message "using double"
+  typedef double real_t;
+#else
+  //#pragma message "using float"
+  typedef float real_t;
+#endif
+
 typedef struct {
   std::string name;
 
-  float ambient[3];
-  float diffuse[3];
-  float specular[3];
-  float transmittance[3];
-  float emission[3];
-  float shininess;
-  float ior;      // index of refraction
-  float dissolve; // 1 == opaque; 0 == fully transparent
+  real_t ambient[3];
+  real_t diffuse[3];
+  real_t specular[3];
+  real_t transmittance[3];
+  real_t emission[3];
+  real_t shininess;
+  real_t ior;      // index of refraction
+  real_t dissolve; // 1 == opaque; 0 == fully transparent
   // illumination model (see http://www.fileformat.info/format/material/)
   int illum;
 
@@ -34,9 +42,9 @@ typedef struct {
 } material_t;
 
 typedef struct {
-  std::vector<float> positions;
-  std::vector<float> normals;
-  std::vector<float> texcoords;
+  std::vector<real_t> positions;
+  std::vector<real_t> normals;
+  std::vector<real_t> texcoords;
   std::vector<unsigned int> indices;
   std::vector<int> material_ids; // per-mesh material ID
 } mesh_t;

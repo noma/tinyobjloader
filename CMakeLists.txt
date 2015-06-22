@@ -22,7 +22,17 @@ set(tinyobjloader-examples-objsticher
 	${TINYOBJLOADEREXAMPLES_DIR}/obj_sticher/obj_sticher.cc
 	)
 
-add_library(tinyobjloader
+set(LIBRARY_NAME tinyobjloader)
+if(DEFINED USE_DOUBLE)
+	# this message is mainly there to prevent an unused variable warning
+	message("NOTE: Building with double instead of float due to USE_DOUBLE=" ${USE_DOUBLE})
+	add_definitions(-DTINY_OBJ_USE_DOUBLE)
+	set(LIBRARY_NAME tinyobjloader_double)
+else()
+set(LIBRARY_NAME tinyobjloader)
+endif()
+
+add_library(${LIBRARY_NAME}
 			${tinyobjloader-Source}
 	)
 
@@ -30,13 +40,13 @@ option(TINYOBJLOADER_BUILD_TEST_LOADER "Build Test Loader Application" OFF)
 
 if(TINYOBJLOADER_BUILD_TEST_LOADER)
   add_executable(test_loader ${tinyobjloader-Test-Source})
-  target_link_libraries(test_loader tinyobjloader)
+  target_link_libraries(test_loader ${LIBRARY_NAME})
 endif()
 
 option(TINYOBJLOADER_BUILD_OBJ_STICHER "Build OBJ Sticher Application" OFF)
 if (TINYOBJLOADER_BUILD_OBJ_STICHER)
   add_executable(obj_sticher ${tinyobjloader-examples-objsticher})
-  target_link_libraries(obj_sticher tinyobjloader)
+  target_link_libraries(obj_sticher ${LIBRARY_NAME})
 
   install ( TARGETS
     obj_sticher
@@ -47,7 +57,7 @@ endif()
 
 #Installation
 install ( TARGETS
-  tinyobjloader
+  ${LIBRARY_NAME}
   DESTINATION
   lib
   )

@@ -59,9 +59,9 @@ static inline bool operator<(const vertex_index &a, const vertex_index &b) {
 }
 
 struct obj_shape {
-  std::vector<float> v;
-  std::vector<float> vn;
-  std::vector<float> vt;
+  std::vector<real_t> v;
+  std::vector<real_t> vn;
+  std::vector<real_t> vt;
 };
 
 static inline bool isSpace(const char c) { return (c == ' ') || (c == '\t'); }
@@ -236,32 +236,36 @@ assemble:
 fail:
 	return false;
 }
-static inline float parseFloat(const char *&token) {
+static inline real_t parseReal(const char *&token) {
   token += strspn(token, " \t");
 #ifdef TINY_OBJ_LOADER_OLD_FLOAT_PARSER
+  #ifdef TINY_OBJ_USE_DOUBLE
+  double f = strtod(token, NULL);
+  #else
   float f = (float)atof(token);
   token += strcspn(token, " \t\r");
+  #endif
 #else
   const char *end = token + strcspn(token, " \t\r");
   double val = 0.0;
   tryParseDouble(token, end, &val);
-  float f = static_cast<float>(val);
+  real_t f = static_cast<real_t>(val);
   token = end;
 #endif
   return f;
 }
 
 
-static inline void parseFloat2(float &x, float &y, const char *&token) {
-  x = parseFloat(token);
-  y = parseFloat(token);
+static inline void parseReal2(real_t &x, real_t &y, const char *&token) {
+  x = parseReal(token);
+  y = parseReal(token);
 }
 
-static inline void parseFloat3(float &x, float &y, float &z,
+static inline void parseReal3(real_t &x, real_t &y, real_t &z,
                                const char *&token) {
-  x = parseFloat(token);
-  y = parseFloat(token);
-  z = parseFloat(token);
+  x = parseReal(token);
+  y = parseReal(token);
+  z = parseReal(token);
 }
 
 // Parse triples: i, i/j/k, i//k, i/j
@@ -300,11 +304,11 @@ static vertex_index parseTriple(const char *&token, int vsize, int vnsize,
 
 static unsigned int
 updateVertex(std::map<vertex_index, unsigned int> &vertexCache,
-             std::vector<float> &positions, std::vector<float> &normals,
-             std::vector<float> &texcoords,
-             const std::vector<float> &in_positions,
-             const std::vector<float> &in_normals,
-             const std::vector<float> &in_texcoords, const vertex_index &i) {
+             std::vector<real_t> &positions, std::vector<real_t> &normals,
+             std::vector<real_t> &texcoords,
+             const std::vector<real_t> &in_positions,
+             const std::vector<real_t> &in_normals,
+             const std::vector<real_t> &in_texcoords, const vertex_index &i) {
   const std::map<vertex_index, unsigned int>::iterator it = vertexCache.find(i);
 
   if (it != vertexCache.end()) {
@@ -357,9 +361,9 @@ void InitMaterial(material_t &material) {
 
 static bool exportFaceGroupToShape(
     shape_t &shape, std::map<vertex_index, unsigned int> vertexCache,
-    const std::vector<float> &in_positions,
-    const std::vector<float> &in_normals,
-    const std::vector<float> &in_texcoords,
+    const std::vector<real_t> &in_positions,
+    const std::vector<real_t> &in_normals,
+    const std::vector<real_t> &in_texcoords,
     const std::vector<std::vector<vertex_index> > &faceGroup,
     const int material_id, const std::string &name, bool clearCache) {
   if (faceGroup.empty()) {
@@ -474,8 +478,8 @@ std::string LoadMtl(std::map<std::string, int> &material_map,
     // ambient
     if (token[0] == 'K' && token[1] == 'a' && isSpace((token[2]))) {
       token += 2;
-      float r, g, b;
-      parseFloat3(r, g, b, token);
+      real_t r, g, b;
+      parseReal3(r, g, b, token);
       material.ambient[0] = r;
       material.ambient[1] = g;
       material.ambient[2] = b;
@@ -485,8 +489,8 @@ std::string LoadMtl(std::map<std::string, int> &material_map,
     // diffuse
     if (token[0] == 'K' && token[1] == 'd' && isSpace((token[2]))) {
       token += 2;
-      float r, g, b;
-      parseFloat3(r, g, b, token);
+      real_t r, g, b;
+      parseReal3(r, g, b, token);
       material.diffuse[0] = r;
       material.diffuse[1] = g;
       material.diffuse[2] = b;
@@ -496,8 +500,8 @@ std::string LoadMtl(std::map<std::string, int> &material_map,
     // specular
     if (token[0] == 'K' && token[1] == 's' && isSpace((token[2]))) {
       token += 2;
-      float r, g, b;
-      parseFloat3(r, g, b, token);
+      real_t r, g, b;
+      parseReal3(r, g, b, token);
       material.specular[0] = r;
       material.specular[1] = g;
       material.specular[2] = b;
@@ -507,8 +511,8 @@ std::string LoadMtl(std::map<std::string, int> &material_map,
     // transmittance
     if (token[0] == 'K' && token[1] == 't' && isSpace((token[2]))) {
       token += 2;
-      float r, g, b;
-      parseFloat3(r, g, b, token);
+      real_t r, g, b;
+      parseReal3(r, g, b, token);
       material.transmittance[0] = r;
       material.transmittance[1] = g;
       material.transmittance[2] = b;
@@ -518,15 +522,15 @@ std::string LoadMtl(std::map<std::string, int> &material_map,
     // ior(index of refraction)
     if (token[0] == 'N' && token[1] == 'i' && isSpace((token[2]))) {
       token += 2;
-      material.ior = parseFloat(token);
+      material.ior = parseReal(token);
       continue;
     }
 
     // emission
     if (token[0] == 'K' && token[1] == 'e' && isSpace(token[2])) {
       token += 2;
-      float r, g, b;
-      parseFloat3(r, g, b, token);
+      real_t r, g, b;
+      parseReal3(r, g, b, token);
       material.emission[0] = r;
       material.emission[1] = g;
       material.emission[2] = b;
@@ -536,7 +540,7 @@ std::string LoadMtl(std::map<std::string, int> &material_map,
     // shininess
     if (token[0] == 'N' && token[1] == 's' && isSpace(token[2])) {
       token += 2;
-      material.shininess = parseFloat(token);
+      material.shininess = parseReal(token);
       continue;
     }
 
@@ -550,13 +554,13 @@ std::string LoadMtl(std::map<std::string, int> &material_map,
     // dissolve
     if ((token[0] == 'd' && isSpace(token[1]))) {
       token += 1;
-      material.dissolve = parseFloat(token);
+      material.dissolve = parseReal(token);
       continue;
     }
     if (token[0] == 'T' && token[1] == 'r' && isSpace(token[2])) {
       token += 2;
       // Invert value of Tr(assume Tr is in range [0, 1])
-      material.dissolve = 1.0 - parseFloat(token);
+      material.dissolve = 1.0 - parseReal(token);
       continue;
     }
 
@@ -652,9 +656,9 @@ std::string LoadObj(std::vector<shape_t> &shapes,
                     std::istream &inStream, MaterialReader &readMatFn) {
   std::stringstream err;
 
-  std::vector<float> v;
-  std::vector<float> vn;
-  std::vector<float> vt;
+  std::vector<real_t> v;
+  std::vector<real_t> vn;
+  std::vector<real_t> vt;
   std::vector<std::vector<vertex_index> > faceGroup;
   std::string name;
 
@@ -701,8 +705,8 @@ std::string LoadObj(std::vector<shape_t> &shapes,
     // vertex
     if (token[0] == 'v' && isSpace((token[1]))) {
       token += 2;
-      float x, y, z;
-      parseFloat3(x, y, z, token);
+      real_t x, y, z;
+      parseReal3(x, y, z, token);
       v.push_back(x);
       v.push_back(y);
       v.push_back(z);
@@ -712,8 +716,8 @@ std::string LoadObj(std::vector<shape_t> &shapes,
     // normal
     if (token[0] == 'v' && token[1] == 'n' && isSpace((token[2]))) {
       token += 3;
-      float x, y, z;
-      parseFloat3(x, y, z, token);
+      real_t x, y, z;
+      parseReal3(x, y, z, token);
       vn.push_back(x);
       vn.push_back(y);
       vn.push_back(z);
@@ -723,8 +727,8 @@ std::string LoadObj(std::vector<shape_t> &shapes,
     // texcoord
     if (token[0] == 'v' && token[1] == 't' && isSpace((token[2]))) {
       token += 3;
-      float x, y;
-      parseFloat2(x, y, token);
+      real_t x, y;
+      parseReal2(x, y, token);
       vt.push_back(x);
       vt.push_back(y);
       continue;
